@@ -1,0 +1,44 @@
+# Environment variables
+.env
+
+# Certificates and keys
+/certs/
+*.crt
+*.key
+*.pem
+
+# Uploaded files
+/uploads/
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace file
+go.work
+
+# Binary folder
+/bin/
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+temp_*
+
+# Log files
+*.log 
