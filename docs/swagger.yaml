@@ -1,0 +1,93 @@
+basePath: /
+host: localhost:8443
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+  description: A secure API for file uploads with JWT authentication, encryption,
+    and rate limiting
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Secure File Upload API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate using basic auth to receive a JWT token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BasicAuth: []
+      summary: Login to get JWT token
+      tags:
+      - auth
+  /upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a file with encryption and rate limiting
+      parameters:
+      - description: File to upload (max 10MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "429":
+          description: Too Many Requests
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - JWT: []
+      summary: Upload a file
+      tags:
+      - files
+schemes:
+- https
+securityDefinitions:
+  BasicAuth:
+    type: basic
+  JWT:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

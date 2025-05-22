@@ -1,5 +1,25 @@
 package main
 
+// @title           Secure File Upload API
+// @version         1.0
+// @description     A secure API for file uploads with JWT authentication, encryption, and rate limiting
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.email  support@example.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8443
+// @BasePath  /
+// @schemes   https
+
+// @securityDefinitions.basic  BasicAuth
+// @securityDefinitions.apikey JWT
+// @in header
+// @name Authorization
+
 import (
 	"crypto/subtle"
 	"crypto/tls"
@@ -14,12 +34,15 @@ import (
 	"sync"
 	"time"
 
+	_ "file-upload/docs" // swagger docs
+
 	"github.com/joho/godotenv"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 const (
-	maxFileSize    = 10 << 20 // 10 MB
-	uploadLimitMin = 10       // 10 uploads per minute
+	maxFileSize    = 10 << 20       // 10 MB
+	uploadLimitMin = 10             // 10 uploads per minute
 	maxFileAge     = 24 * time.Hour // Files older than 24 hours will be deleted
 )
 
@@ -134,7 +157,7 @@ func checkRateLimit(ip string) bool {
 func sanitizeFilename(filename string) string {
 	// Remove path components
 	filename = filepath.Base(filename)
-	
+
 	// Remove special characters
 	filename = strings.Map(func(r rune) rune {
 		switch {
@@ -158,6 +181,18 @@ func sanitizeFilename(filename string) string {
 	return filename
 }
 
+// @Summary      Upload a file
+// @Description  Upload a file with encryption and rate limiting
+// @Tags         files
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        file  formData  file  true  "File to upload (max 10MB)"
+// @Success      200   {object}  map[string]string
+// @Failure      400   {object}  map[string]string
+// @Failure      401   {object}  map[string]string
+// @Failure      429   {object}  map[string]string
+// @Security     JWT
+// @Router       /upload [post]
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	// Method validation
 	if r.Method != http.MethodPost {
@@ -234,7 +269,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	baseFilename := strings.TrimSuffix(filename, ext)
 	timestamp := time.Now().Format("20060102150405")
 	safeFilename := fmt.Sprintf("%s_%s_%s%s", username, baseFilename, timestamp, ext)
-	
+
 	// Create temporary file for initial upload
 	tempPath := filepath.Join("uploads", "temp_"+safeFilename)
 	dst, err := os.Create(tempPath)
@@ -275,6 +310,15 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, `{"message": "File uploaded successfully", "filename": "%s"}`, safeFilename)
 }
 
+// @Summary      Login to get JWT token
+// @Description  Authenticate using basic auth to receive a JWT token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Security     BasicAuth
+// @Router       /login [post]
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -337,13 +381,19 @@ func main() {
 	http.HandleFunc("/login", logger.LogRequest(loginHandler))
 	http.HandleFunc("/upload", logger.LogRequest(jwtAuth(uploadHandler)))
 
+	// Swagger documentation endpoint
+	http.HandleFunc("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"), // The url pointing to API definition
+	))
+
 	// Start HTTPS server
 	certFile := os.Getenv("TLS_CERT_FILE")
 	keyFile := os.Getenv("TLS_KEY_FILE")
-	
+
 	logger.Info("Server starting on port 8443 (HTTPS)...")
+	logger.Info("Swagger documentation available at https://localhost:8443/swagger/index.html")
 	if err := server.ListenAndServeTLS(certFile, keyFile); err != nil {
 		logger.Error("Server failed: %v", err)
 		os.Exit(1)
 	}
-} 
+}
