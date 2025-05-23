@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  file-upload-api:
+    build: .
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./.env:/app/.env
+    restart: unless-stopped 

@@ -1,1 +1,2 @@
-This is a test file
+This is a test file for the secure file upload API.
+Created for testing the Docker container implementation.

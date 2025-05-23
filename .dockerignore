@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+README.md
+uploads/*
+certs/*.crt
+certs/*.key
+certs/*.pem
+*.md
+docs/
+test.txt 
